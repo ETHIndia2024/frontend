@@ -82,17 +82,7 @@ export async function GET(request: Request) {
     }
   })
 
-  console.log('Creator stats:', {
-    totalDatasets,
-    totalDatasetsChange: totalDatasets - totalDatasetsLastWeek,
-    labellingProgress,
-    labellingProgressLastWeek,
-    labellingProgressChange: labellingProgress - (labellingProgressLastWeek / totalImages * 100),
-    activeLabelersCount,
-    activeLabelersChange: activeLabelersCount - activeLabelersCountLastWeek,
-    recentUploads,
-    }
-  )
+
 
   return NextResponse.json({
     totalDatasets,

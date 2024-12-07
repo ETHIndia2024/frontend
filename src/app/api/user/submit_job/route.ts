@@ -2,26 +2,36 @@ import { NextResponse } from 'next/server'
 import prisma from '@/lib/db'
 
 export async function POST(req: Request) {
-
   try {
+    const { walletAddress, labellingJobId, winnerId, loserId } = await req.json()
 
-    const { walletAddress, labellingJobId, imageId } = await req.json()
     const user = await prisma.user.findUnique({
       where: { walletAddress }
     })
-    const userId = user?.id;
+    const userId = user?.id
 
+    console.log(userId, labellingJobId, winnerId, loserId)
 
-    if (!userId || !labellingJobId || !imageId) {
-      return NextResponse.json({ error: 'User ID, labelling job ID, and image ID are required' }, { status: 400 })
+    if (!userId || !labellingJobId || !winnerId || !loserId) {
+      return NextResponse.json({ error: 'User ID, labelling job ID, winner ID, and loser ID are required' }, { status: 400 })
     }
 
-    const labelling = await prisma.labelling.create({
-      data: {
-        user: { connect: { id: userId } },
-        labellingJob: { connect: { id: labellingJobId } },
-        image: { connect: { id: imageId } }
-      }
+    const comparison = await prisma.comparison.upsert({
+      where: {
+        labellingJobId_winnerId_loserId_userId: {
+          userId: userId,
+          labellingJobId: labellingJobId,
+          winnerId: winnerId,
+          loserId: loserId
+        }
+      },
+      create: {
+        userId: userId,
+        labellingJobId: labellingJobId,
+        winnerId: winnerId,
+        loserId: loserId
+      },
+      update: {}
     })
 
     const labellingJob = await prisma.labellingJob.findUnique({
@@ -40,16 +50,22 @@ export async function POST(req: Request) {
         claimableRewards: { increment: labellingJob.reward }
       }
     })
+    try {
+      await prisma.viewedImage.createMany({
+        data: [
+          { userId, imageId: winnerId },
+          { userId, imageId: loserId }
+        ]
+      })
+    } catch (err) {
+      console.log('Error creating viewed image:', err)
+    }
 
-    await prisma.labellingJob.update({
-      where: { id: labellingJobId },
-      data: { labelledByCount: { increment: 1 } }
-    })
 
-    return NextResponse.json({ success: true, labelling })
+    return NextResponse.json({ success: true, comparison })
   } catch (error) {
-    console.error('Error submitting labelling:', error)
-    return NextResponse.json({ error: 'Error submitting labelling' }, { status: 500 })
+    console.error('Error submitting comparison:', error)
+    return NextResponse.json({ error: 'Error submitting comparison' }, { status: 500 })
   }
 }
 

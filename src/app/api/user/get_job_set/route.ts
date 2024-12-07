@@ -4,28 +4,29 @@ import prisma from '@/lib/db'
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url)
-    const walletAddress = searchParams.get('walletAddress');
-    console.log('walletAddress:', walletAddress)
+    const walletAddress = searchParams.get('walletAddress')
 
-    if(walletAddress === null) return NextResponse.json({ error: 'Wallet address is required' }, { status: 400 });
-
-    const user = await prisma.user.findUnique({
-      where: { walletAddress }
-    })
-    const userId = user?.id;
-
-    console.log('userId:', userId)
-
-    if (!userId) {
-      return NextResponse.json({ error: 'User ID is required' }, { status: 400 })
+    if (!walletAddress) {
+      return NextResponse.json(
+        { error: 'Wallet address is required' }, 
+        { status: 400 }
+      )
     }
 
-    const labellingJob = await prisma.labellingJob.findFirst({
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { walletAddress }
+    })
+
+    const labellingJobs = await prisma.labellingJob.findMany({
       where: {
-        NOT: {
-          labellings: {
-            some: {
-              userId: userId
+        images: {
+          some: {
+            NOT: {
+              viewedBy: {
+                some: {
+                  userId: user.id
+                }
+              }
             }
           }
         }
@@ -34,28 +35,47 @@ export async function GET(req: Request) {
         images: {
           where: {
             NOT: {
-              labellings: {
+              viewedBy: {
                 some: {
-                  userId: userId
+                  userId: user.id
                 }
               }
             }
-          },
-          take: 2
+          }
         }
       }
     })
 
-    if (!labellingJob) {
-      return NextResponse.json({ message: 'No more labelling jobs available' }, { status: 404 })
+    if (labellingJobs.length === 0) {
+      return NextResponse.json(
+        { message: 'No more labelling jobs available with unviewed images' }, 
+        { status: 404 }
+      )
     }
 
-    console.log(labellingJob)
+    // Sort labelling jobs by the number of unviewed images
+    labellingJobs.sort((a, b) => b.images.length - a.images.length)
 
-    return NextResponse.json(labellingJob)
+    // Select the job with the most unviewed images
+    const selectedJob = labellingJobs[0]
+
+    // Take only the first two images
+    selectedJob.images = selectedJob.images.slice(0, 2)
+
+    if (selectedJob.images.length < 2) {
+      return NextResponse.json(
+        { message: 'No more labelling jobs available with at least two unviewed images' }, 
+        { status: 404 }
+      )
+    }
+
+    return NextResponse.json(selectedJob)
   } catch (error) {
     console.error('Error fetching labelling job:', error)
-    return NextResponse.json({ error: 'Error fetching labelling job' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
   }
 }
 

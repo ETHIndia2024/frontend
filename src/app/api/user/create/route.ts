@@ -16,8 +16,6 @@ export async function POST(req: Request) {
         create: { walletAddress }
     })
 
-    console.log("User accout created: ", user);
-
     return NextResponse.json(user)
   } catch (error) {
     console.error('Error creating user:', error)

@@ -7,19 +7,20 @@ import Image from "next/image"
 import { useState, useCallback, useEffect } from "react"
 
 interface ImagePair {
-  id: string
-  images: { id: string; url: string,labellingJobId:string }[]
+  jobId: string
+  jobTitle: string
+  images: { id: string; url: string }[]
 }
 
 export default function PlayPage() {
   const wallet = useWallet();
-  const [currentIndex, setCurrentIndex] = useState(0)
   const [selectedMainCategory, setSelectedMainCategory] = useState<string>('images')
   const [likedStates, setLikedStates] = useState<Record<string, boolean>>({})
   const [isLiking, setIsLiking] = useState(false)
-  const [imagePairs, setImagePairs] = useState<ImagePair[]>([])
+  const [imagePairs, setImagePairs] = useState<ImagePair>()
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null);
+  const [currentIndex, setCurrentIndex] = useState(0)
 
   const mainCategories = [
     { name: 'images', label: 'Images', icon: <Star className="w-5 h-5" /> },
@@ -46,11 +47,8 @@ export default function PlayPage() {
         throw new Error('Failed to fetch images')
       }
       const data = await response.json()
-      const imageUrls = data.images.map((image: { id: string; url: string }) => ({
-        id: image.id,
-        url: image.url,
-      }))
-      setImagePairs([...imagePairs, { id: Date.now().toString(), images: data.images }])
+      console.log(data)
+      setImagePairs({ jobId: data.id, jobTitle: data.title, images: data.images })
     } catch (err) {
       setError('Failed to load images. Please try again.')
     } finally {
@@ -58,80 +56,56 @@ export default function PlayPage() {
     }
   }
 
-
-  const handleLike = useCallback(async (imageId: string) => {
+  const handleLike = async (imageId: string) => {
     setIsLiking(true)
     try {
-      const currentPair = imagePairs[currentIndex]
-      console.log(currentPair)
-      const likedImage = currentPair.images.find(img => img.id === imageId)
-      if (!likedImage) throw new Error('Image not found')
-      if(!wallet.account?.address) return;
+      if(!imagePairs) return;
+      const likedImage = imagePairs.images.find(img => img.id === imageId)
+      const otherImage = imagePairs.images.find(img => img.id !== imageId)
+      if (!likedImage || !otherImage) throw new Error('Image not found')
+      if (!wallet.account?.address) return;
+      console.log(imagePairs.jobId, imageId, otherImage.id)
       const response = await fetch('/api/user/submit_job', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          walletAddress:wallet.account?.address,
-          labellingJobId: currentPair.images[0].labellingJobId,
-          imageId: imageId,
+          walletAddress: wallet.account?.address,
+          labellingJobId: imagePairs.jobId,
+          winnerId: imageId,
+          loserId: otherImage.id,
         }),
       })
       if (!response.ok) {
-        throw new Error('Failed to submit result')
+        throw new Error('Failed to submit comparison')
       }
       setLikedStates(prev => ({ ...prev, [imageId]: true }))
-      if (currentIndex === imagePairs.length - 1) {
-        if (wallet.account?.address) {
-          await fetchImages(wallet.account.address)
-        }
+      console.log("Liked image", imageId,"fetch new images called")
+      if (wallet.account?.address) {
+        await fetchImages(wallet.account.address)
       }
-      setCurrentIndex(prev => (prev + 1) % imagePairs.length)
     } catch (err) {
-      setError('Failed to submit like. Please try again.')
+      setError('Failed to submit comparison. Please try again.')
     } finally {
       setIsLiking(false)
     }
-  }, [currentIndex, imagePairs, fetchImages])
-
-  const handleNext = useCallback(() => {
-    if (currentIndex === imagePairs.length - 1) {
-      if (wallet.account?.address) {
-        fetchImages(wallet.account.address)
-      }
-    }
-    setCurrentIndex(prev => (prev + 1) % imagePairs.length)
-  }, [currentIndex, imagePairs.length, fetchImages])
-
-  const handlePrevious = useCallback(() => {
-    setCurrentIndex(prev => (prev - 1 + imagePairs.length) % imagePairs.length)
-  }, [imagePairs.length])
-
-  const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    const swipe = swipePower(info.offset.y, info.velocity.y)
-    if (swipe < -swipeConfidenceThreshold) {
-      handleNext()
-    } else if (swipe > swipeConfidenceThreshold) {
-      handlePrevious()
-    }
   }
 
+
+
   useEffect(() => {
-    if (wallet.account?.address && imagePairs.length === 0) {
+    if (wallet.account?.address && imagePairs===undefined) {
       fetchImages(wallet.account.address)
     }
-  }, [wallet.account?.address, imagePairs.length])
+  }, [wallet.account?.address, imagePairs])
 
-  useEffect(() => {
-    setCurrentIndex(0)
-  }, [selectedMainCategory])
 
-  if (isLoading && imagePairs.length === 0) {
+  if (imagePairs === undefined) {
     return <div className="h-screen flex items-center justify-center">Loading...</div>
   }
 
-  if (error && imagePairs.length === 0) {
+  if (error && imagePairs === undefined) {
     return <div className="h-screen flex items-center justify-center text-red-500">{error}</div>
   }
 
@@ -147,17 +121,21 @@ export default function PlayPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
             >
-              
-              {imagePairs[currentIndex]?.images.map((image, index) => {
-                console.log()
-                return (
+              {imagePairs.images.map((image, index) => (
+                <motion.div
+                  key={image.id}
+                  className="flex-1 relative"
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: index * 0.2 }}
+                >
                   <motion.div
-                    key={image.id}
-                    className="flex-1 relative"
-                    initial={{ scale: 0.9, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ delay: index * 0.2 }}
+                    className={`rounded-2xl p-0.5 bg-gradient-to-b ${index === 0 ? 'from-blue-400 to-green-400' : 'from-pink-400 to-red-400'
+                      } shadow-lg`}
+                    whileHover={{ scale: 1.03 }}
+                    transition={{ type: "spring", stiffness: 300 }}
                   >
+<<<<<<< HEAD
                     <motion.div
                       className={`rounded-2xl p-0.5 bg-gradient-to-b ${index === 0 ? 'from-blue-400 to-green-400' : 'from-pink-400 to-red-400'
                         } shadow-lg`}
@@ -184,9 +162,29 @@ export default function PlayPage() {
                         </motion.button>
                       </div>
                     </motion.div>
+=======
+                    <div className="relative rounded-xl overflow-hidden w-full aspect-[3/4] bg-gray-100">
+                      <Image
+                        src={`${process.env.NEXT_PUBLIC_AGGREGATOR}/v1/${image.url}`}
+                        alt={`Image ${image.id}`}
+                        fill
+                        className="object-cover"
+                      />
+                      <motion.button
+                        className="absolute bottom-3 right-3 p-2 bg-white rounded-full shadow-md"
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => handleLike(image.id)}
+                        disabled={isLiking}
+                        aria-label={`Like image ${image.id}`}
+                      >
+                        <Heart className={`w-5 h-5 ${likedStates[image.id] ? 'text-red-500 fill-red-500' : 'text-gray-400'
+                          }`} />
+                      </motion.button>
+                    </div>
+>>>>>>> 21393d5c763042ae9f5dcf8e8843f06b066a6288
                   </motion.div>
-                )
-              })}
+                </motion.div>
+              ))}
             </motion.div>
           ) : (
             <motion.div
@@ -194,7 +192,7 @@ export default function PlayPage() {
               className="w-full h-[70vh] aspect-[9/16] relative"
               drag="y"
               dragConstraints={{ top: 0, bottom: 0 }}
-              onDragEnd={handleDragEnd}
+              onDragEnd={()=>{}}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -221,7 +219,7 @@ export default function PlayPage() {
                 <div className="flex flex-col gap-4">
                   <motion.button
                     whileTap={{ scale: 0.9 }}
-                    onClick={handlePrevious}
+                    onClick={()=>{}}
                     className="p-2 bg-white/20 rounded-full backdrop-blur-sm"
                     aria-label="Previous video"
                   >
@@ -229,7 +227,7 @@ export default function PlayPage() {
                   </motion.button>
                   <motion.button
                     whileTap={{ scale: 0.9 }}
-                    onClick={handleNext}
+                    onClick={()=>{}}
                     className="p-2 bg-white/20 rounded-full backdrop-blur-sm"
                     aria-label="Next video"
                   >

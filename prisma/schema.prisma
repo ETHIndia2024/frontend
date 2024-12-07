@@ -1,32 +1,31 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
 model User {
-  id                 String     @id @default(cuid())
-  walletAddress      String     @unique
-  tasksCompleted     Int        @default(0)
-  claimableRewards   Float      @default(0)
-  createdAt          DateTime   @default(now())
-  updatedAt          DateTime   @updatedAt
+  id                String     @id @default(cuid())
+  walletAddress     String     @unique
+  tasksCompleted    Int        @default(0)
+  claimableRewards  Float      @default(0)
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
 
-  // These are the labellings completed by the users.
-  labellings         Labelling[]
+  // These are the once labelled by the users.
+  labellings        Labelling[]
 
-  // These are the jobs created by the users.
-  labellingJobs LabellingJob[]
+  // These are the once uploaded by the users.
+  labellingJobs     LabellingJob[]
+  comparisons       Comparison[]
+  viewedImages      ViewedImage[]
 }
 
 model LabellingJob {
@@ -36,11 +35,12 @@ model LabellingJob {
   reward           Float
   createdAt        DateTime   @default(now())
   updatedAt        DateTime   @updatedAt
-  creator          User @relation(fields: [creatorId], references: [id])
+  creator          User       @relation(fields: [creatorId], references: [id])
   creatorId        String
   labelledByCount  Int        @default(0)
   images           Image[]
   labellings       Labelling[]
+  comparisons      Comparison[]
 }
 
 model Image {
@@ -50,6 +50,9 @@ model Image {
   labellingJobId String
   createdAt      DateTime     @default(now())
   labellings     Labelling[]
+  wonComparisons Comparison[] @relation("Winner")
+  lostComparisons Comparison[] @relation("Loser")
+  viewedBy       ViewedImage[]
 }
 
 model Labelling {
@@ -63,5 +66,31 @@ model Labelling {
   createdAt      DateTime     @default(now())
 
   @@unique([labellingJobId, imageId, userId])
+}
+
+model Comparison {
+  id             String       @id @default(cuid())
+  labellingJob   LabellingJob @relation(fields: [labellingJobId], references: [id])
+  labellingJobId String
+  winner         Image        @relation("Winner", fields: [winnerId], references: [id])
+  winnerId       String
+  loser          Image        @relation("Loser", fields: [loserId], references: [id])
+  loserId        String
+  user           User         @relation(fields: [userId], references: [id])
+  userId         String
+  createdAt      DateTime     @default(now())
+
+  @@unique([labellingJobId, winnerId, loserId, userId])
+}
+
+model ViewedImage {
+  id             String       @id @default(cuid())
+  user           User         @relation(fields: [userId], references: [id])
+  userId         String
+  image          Image        @relation(fields: [imageId], references: [id])
+  imageId        String
+  createdAt      DateTime     @default(now())
+
+  @@unique([userId, imageId])
 }
 

@@ -43,7 +43,6 @@ export default function UploadPage() {
   })
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    console.log('values:', values);
     try{
       setIsLoading(true);
       const files = values.data as FileList;
@@ -62,9 +61,9 @@ export default function UploadPage() {
           });
   
           const result = await response.json();
-          if(result.alreadyCertified.blobId){
+          if(result.alreadyCertified){
             blobs.push(result.alreadyCertified.blobId);
-          }else if(result.newlyCreated.blobObject.blobId){
+          }else if(result.newlyCreated){
             blobs.push(result.newlyCreated.blobObject.blobId);
           }
   
