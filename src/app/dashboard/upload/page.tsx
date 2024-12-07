@@ -79,14 +79,14 @@ export default function UploadPage() {
         }
       }
       if (wallet.account?.address) {
-        const id = parseInt(crypto.randomUUID().slice(0, 8), 16);
-        const txn = await createTask(
-          id, //id
-          values.name, //name
-          FIXED_PAYMENT, //reward per annotation
-          Math.floor(Number(values.reward) / FIXED_PAYMENT), //required annotations
-        );
-        console.log('Transaction executed:', txn);
+        // const id = parseInt(crypto.randomUUID().slice(0, 8), 16);
+        // const txn = await createTask(
+        //   id, //id
+        //   values.name, //name
+        //   FIXED_PAYMENT, //reward per annotation
+        //   Math.floor(Number(values.reward) / FIXED_PAYMENT), //required annotations
+        // );
+        // console.log('Transaction executed:', txn);
 
         const res = await fetch('/api/job/create', {
           method: 'POST',

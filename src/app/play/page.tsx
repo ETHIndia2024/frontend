@@ -166,7 +166,8 @@ export default function PlayPage() {
                     >
                       <div className="relative rounded-xl overflow-hidden w-full aspect-[3/4] bg-gray-100">
                         <Image
-                          src={`${process.env.NEXT_PUBLIC_AGGREGATOR}/v1/${image.url}`}
+                          // src={`${process.env.NEXT_PUBLIC_AGGREGATOR}/v1/${image.url}`}
+                          src="https://placehold.co/600x400.png"
                           alt={`Image ${image.id}`}
                           fill
                           className="object-cover"
@@ -263,4 +264,3 @@ export default function PlayPage() {
     </div>
   )
 }
-
