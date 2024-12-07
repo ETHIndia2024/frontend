@@ -31,7 +31,7 @@ export default function Navbar() {
         <nav className="fixed w-full z-50 flex justify-between items-center py-4 px-4 border-b border-primary/10 bg-secondary/80">
             <Link href={'/'} className="flex items-center group">
                 <h1 className="ml-2 text-2xl font-bold text-primary group-hover:text-primary/80 transition-colors">
-                    Label.xyz
+                    Tapster 
                 </h1>
             </Link>
             <div className="hidden md:flex items-center gap-2">

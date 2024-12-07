@@ -135,34 +135,6 @@ export default function PlayPage() {
                     whileHover={{ scale: 1.03 }}
                     transition={{ type: "spring", stiffness: 300 }}
                   >
-<<<<<<< HEAD
-                    <motion.div
-                      className={`rounded-2xl p-0.5 bg-gradient-to-b ${index === 0 ? 'from-blue-400 to-green-400' : 'from-pink-400 to-red-400'
-                        } shadow-lg`}
-                      whileHover={{ scale: 1.03 }}
-                      transition={{ type: "spring", stiffness: 300 }}
-                    >
-                      <div className="relative rounded-xl overflow-hidden w-full aspect-[3/4] bg-gray-100">
-                        <Image
-                          // src={`${process.env.NEXT_PUBLIC_AGGREGATOR}/v1/${image.url}`}
-                          src="https://placehold.co/600x400.png"
-                          alt={`Image ${image.id}`}
-                          fill
-                          className="object-cover"
-                        />
-                        <motion.button
-                          className="absolute bottom-3 right-3 p-2 bg-white rounded-full shadow-md"
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => handleLike(image.id)}
-                          disabled={isLiking}
-                          aria-label={`Like image ${image.id}`}
-                        >
-                          <Heart className={`w-5 h-5 ${likedStates[image.id] ? 'text-red-500 fill-red-500' : 'text-gray-400'
-                            }`} />
-                        </motion.button>
-                      </div>
-                    </motion.div>
-=======
                     <div className="relative rounded-xl overflow-hidden w-full aspect-[3/4] bg-gray-100">
                       <Image
                         src={`${process.env.NEXT_PUBLIC_AGGREGATOR}/v1/${image.url}`}
@@ -181,7 +153,6 @@ export default function PlayPage() {
                           }`} />
                       </motion.button>
                     </div>
->>>>>>> 21393d5c763042ae9f5dcf8e8843f06b066a6288
                   </motion.div>
                 </motion.div>
               ))}
