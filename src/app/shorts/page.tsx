@@ -53,19 +53,50 @@ export default function ShortsPage() {
   const videos: Video[] = [
     {
       id: 'v1',
-      url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-      title: 'Big Buck Bunny'
+      url: '/shorts/videoa.mp4',
+      title: 'Video Play'
     },
     {
-      id: 'v2', 
-      url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
-      title: 'Elephant Dreams'
+      id: 'v2',
+      url: '/shorts/videop.mp4', 
+      title: 'Video Play 2'
     },
     {
       id: 'v3',
-      url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-      title: 'For Bigger Blazes'
-    }
+      url: '/shorts/videopl.mp4',
+      title: 'Video Play 3'
+    },
+    {
+        id: 'v4',
+        url: '/shorts/videopla.mp4',
+        title: 'Video Play 3'
+      },
+      {
+        id: 'v5',
+        url: '/shorts/videoplay.mp4',
+        title: 'Video Play 5'
+      },
+      {
+        id: 'v6',
+        url: '/shorts/videoplayb.mp4',
+        title: 'Video Play 6'
+      },
+      {
+        id: 'v7',
+        url: '/shorts/videoplaybac.mp4',
+        title: 'Video Play 7'
+      },
+      {
+        id: 'v8',
+        url: '/shorts/videoplayback.mp4',
+        title: 'Video Play 8'
+      },
+      {
+        id: 'v9',
+        url: '/shorts/videoplayba.mp4',
+        title: 'Video Play 9'
+      }
+
   ]
 
   const handleSwipe = (direction: number) => {
@@ -120,8 +151,8 @@ export default function ShortsPage() {
             className="h-full w-full object-cover"
             autoPlay
             loop
-            muted
             playsInline
+            controls // Added controls to allow users to control audio
           />
           
           <div 
@@ -195,4 +226,3 @@ export default function ShortsPage() {
     </div>
   )
 }
-
