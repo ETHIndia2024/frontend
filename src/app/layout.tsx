@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client'
 import Navbar from "@/components/navbar";
 import "./globals.css";
@@ -13,7 +14,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="h-screen">
         <WalletProviderWrapper>
-          <Navbar />
+          {/* <Navbar /> */}
           {children}
         </WalletProviderWrapper>
       </body>
